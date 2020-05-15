@@ -22,11 +22,17 @@ func initRoutes() {
 	tmpl := template.Must(template.ParseFiles("web/templates/index.html"))
 
   http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		visitorCounter++
-			data := PageData {
-				VisitorCount: visitorCounter,
-			}
-			tmpl.Execute(w, data)
+
+		// Don't count the /favicon.ico request
+		if r.URL.String() == "/" {
+			visitorCounter++
+		}
+
+		data := PageData {
+			VisitorCount: visitorCounter,
+		}
+
+		tmpl.Execute(w, data) // Merge the template & data
 	})
 }
 
