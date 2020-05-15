@@ -4,23 +4,30 @@ import (
 	"fmt"
 	"log"
   "net/http"
+	"html/template"
 )
+
+type PageData struct {
+	VisitorCount int
+}
+
+var visitorCounter int
 
 func init() {
   initRoutes()
 }
 
 func initRoutes() {
-  http.HandleFunc("/", indexRoute)
-}
 
-func indexRoute(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, Hello())
-}
+	tmpl := template.Must(template.ParseFiles("web/templates/index.html"))
 
-// Hello ... The ever classic "Hello World"
-func Hello() string {
-    return "Hello, world"
+  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		visitorCounter++
+			data := PageData {
+				VisitorCount: visitorCounter,
+			}
+			tmpl.Execute(w, data)
+	})
 }
 
 func Start() {
