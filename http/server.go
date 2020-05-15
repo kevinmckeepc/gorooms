@@ -31,21 +31,13 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 		visitorCounter++
 	}
 
-	data := PageData {
-		VisitorCount: visitorCounter,
-	}
-
-	tmpl.Execute(w, data) // Merge the template & data
+	tmpl.Execute(w, data()) // Merge the template & data
 }
 
 // Returns the raw visitor data in json
 func dataRoute(w http.ResponseWriter, r *http.Request) {
 
-	data := PageData {
-		VisitorCount: visitorCounter,
-	}
-
-	js, err := json.Marshal(data)
+	js, err := json.Marshal(data())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -53,6 +45,14 @@ func dataRoute(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+
+// Builds the page data to push into responses
+func data() PageData {
+	data := PageData {
+		VisitorCount: visitorCounter,
+	}
+	return data
 }
 
 func Start() {
