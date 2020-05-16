@@ -4,25 +4,59 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 
     <script>
-      $().ready(function () {
-          pollServer();
-      });
 
-      function pollServer() {
-          window.setTimeout(function () {
-              $.ajax({
-                  url: "/data",
-                  type: "POST",
-                  success: function (result) {
-                    console.log(result);
-                    $('#visitor-counter').html(result.VisitorCount);
-                    pollServer();
-                  },
-                  error: function () {
-                      pollServer();
-                  }});
-          }, 1000);
+      var ws;
+
+      function connect() {
+
+        // Connect to the websocket
+        if (window["WebSocket"]) {
+            console.log('We have WebSockets available');
+            let socketUrl = "ws://" + document.location.host + "/ws"
+            console.log(socketUrl);
+            ws = new WebSocket(socketUrl);
+
+            ws.onopen = function (e) {
+              console.log('Connection opened');
+            };
+
+            ws.onclose = function (e) {
+              console.log('Connection closed');
+            };
+
+            ws.onmessage = function (e) {
+              //var msg = JSON.parse(e.data);
+              console.log(`Received message ${e.data}`);
+            };
+        } else {
+          console.log('Your browser does not support WebSockets.');
+        }
       }
+
+      function handleMouseMove(event) {
+           var eventDoc, doc, body;
+           event = event || window.event;
+
+           var msg = {x: event.pageX, y: event.pageY};
+           if (!ws) {
+             console.log('No connection!');
+             return false;
+          }
+          //console.log('Sending message', msg);
+          //ws.send(JSON.stringify({ Num: parseInt($("#numberfield").val()) }));
+          //conn.send(JSON.stringify(msg));
+          //console.log(ws.readyState);
+          let payload = JSON.stringify(msg);
+          console.log(payload);
+
+          ws.send(payload);
+          //ws.send(msg);
+       }
+
+      $().ready(function () {
+        connect();
+        document.onmousemove = handleMouseMove;
+      });
     </script>
   </head>
   <body>
