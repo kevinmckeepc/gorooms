@@ -42,15 +42,8 @@
              console.log('No connection!');
              return false;
           }
-          //console.log('Sending message', msg);
-          //ws.send(JSON.stringify({ Num: parseInt($("#numberfield").val()) }));
-          //conn.send(JSON.stringify(msg));
-          //console.log(ws.readyState);
           let payload = JSON.stringify(msg);
-          console.log(payload);
-
           ws.send(payload);
-          //ws.send(msg);
        }
 
       $().ready(function () {
@@ -60,7 +53,8 @@
     </script>
   </head>
   <body>
-    <h1>Hello WWW 2006</h1>
+    <h1>Hello WWW 2009 / 2010
+    </h1>
     <h2>This page has had <span id="visitor-counter">{{.VisitorCount}}</span> visitors</h2>
   </body>
 <html>

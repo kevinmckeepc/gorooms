@@ -1,11 +1,11 @@
-package http
+package ws
 
 import (
+  "encoding/json"
   "fmt"
 	"bytes"
 	"log"
 	"time"
-  "encoding/json"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,7 +32,6 @@ var (
 type Position struct {
 	X int  `json:"x"`
   Y int  `json:"y"`
-  JSON json.RawMessage
 }
 
 // Client is a middleman between the websocket connection and the hub.
@@ -47,6 +46,7 @@ type Client struct {
 	send chan []byte
 }
 
+// Performs a simple echo back to the client with their original message
 func (c *Client) echo() {
 	for {
 		p := Position{}
@@ -63,6 +63,7 @@ func (c *Client) echo() {
 		}
 	}
 }
+
 // readPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
@@ -84,14 +85,14 @@ func (c *Client) readPump() {
     err := c.conn.ReadJSON(&p)
     fmt.Printf("Read message: %#v\n", p)
 		if err != nil {
-      fmt.Println("💩")
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
 
-    message := make([]byte, 0)
+    message, _ := json.Marshal(p)
+    //message := make([]byte, 0)
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		c.hub.broadcast <- message
 	}
@@ -104,10 +105,12 @@ func (c *Client) readPump() {
 // executing all writes from this goroutine.
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
+
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
 	}()
+
 	for {
 		select {
 		case message, ok := <-c.send:

@@ -1,7 +1,11 @@
-package http
+package ws
 
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
+import (
+	"fmt"
+	"net/http"
+)
+
+// Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
 
 	// Registered clients.
@@ -17,7 +21,8 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func newHub() *Hub {
+// Our singleton instance of the hub
+func SharedHub() *Hub {
 
 	return &Hub{
     broadcast:  make(chan []byte),
@@ -27,7 +32,27 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run() {
+// Performs the ws upgrade
+func (h *Hub) Upgrade(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("Upgrading connection ...")
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println("💩", err)
+		return
+	}
+
+	client := &Client{hub: h, conn: conn, send: make(chan []byte, 256)}
+	client.hub.register <- client
+
+	// Allow collection of memory referenced by the caller by doing all work in
+	// new goroutines.
+	go client.writePump()
+	go client.readPump()
+
+}
+
+func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
