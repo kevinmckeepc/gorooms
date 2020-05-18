@@ -35,10 +35,16 @@
 
             ws.onopen = function (e) {
               console.log('Connection opened');
+              $('#btn-action').removeClass('btn-success').addClass('btn-danger').html('Leave Room');
+              // Start sending mouse move events
+              document.onmousemove = handleMouseMove;
             };
 
             ws.onclose = function (e) {
               console.log('Connection closed');
+              $('#btn-action').removeClass('btn-danger').addClass('btn-success').html('Join Room');
+              // Stop sending mouse move events
+              document.onmousemove = function() { };
             };
 
             ws.onmessage = function (e) {
@@ -74,8 +80,8 @@
        // Start driving UI events from our socket messages
        function handlePositionMessage(message) {
          let uid = message.uid;
-         console.log(`Received message ${uid}`);
 
+         // Ignore my own events
          if (uid == me.uid) {
            return false;
          }
@@ -91,10 +97,10 @@
          users[uid] = message;
 
          // Move the div element to the users x, y position
-         console.log(`🐳 Moving ${message.name} to [${message.x}, ${message.y}]`);
          $(`#${uid}`).css({ top: message.y, left: message.x});
        }
 
+       // Helper function to generate hex color based on user id
        function stringToColour(str) {
           var hash = 0;
           for (var i = 0; i < str.length; i++) {
@@ -110,7 +116,19 @@
 
        // Wait for the dom to ready
        $().ready(function () {
+
+         // Action button
+         $('#btn-action').click(function(e) {
+           if (ws && ws.readyState === WebSocket.OPEN) {
+             ws.close();
+             return false;
+           }
+           $('#joinModal').modal();
+         });
+
+         // Connect to our room
          $('#btn-connect').click(function(e) {
+
            let uid = Math.random().toString(36).substring(2) + Date.now().toString(36);
            var name = $('#inputName').val();
            if (name.length == 0) {
@@ -118,20 +136,22 @@
            }
 
            me = {uid: uid, name: name}; // Save our `me` info
+
+           // Connect to the websocket
            connect();
-           // Start sending mouse move events
-           document.onmousemove = handleMouseMove;
         });
       });
     </script>
   </head>
+
   <body class="text-center">
 
     <div class="container-fluid mt-5">
         <div class="row">
             <div class="col">
               <!-- Button trigger modal -->
-              <button type="button" id="btn-join" class="btn btn-lg btn-success" data-toggle="modal" data-target="#joinModal">
+              <!-- data-toggle="modal" data-target="#joinModal" -->
+              <button type="button" id="btn-action" class="btn btn-lg btn-success">
                 Join Room
               </button>
             </div>
