@@ -1,6 +1,6 @@
 # GoLang Install
 
-First, you'll want to export paths in your `.zshrc` OR `.bash_profile` files.
+First, you'll want to export some paths in your `.zshrc` OR `.bash_profile` files.
 
 ```
 export GOPATH=$HOME/go
