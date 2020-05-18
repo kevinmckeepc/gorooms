@@ -85,7 +85,7 @@ func (c *Client) readPump() {
     //_, message, err := c.conn.ReadMessage()
     p := Position{}
     err := c.conn.ReadJSON(&p)
-    fmt.Printf("Read message: %#v\n", p)
+    //fmt.Printf("Read message: %#v\n", p)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)

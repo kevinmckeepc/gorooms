@@ -35,7 +35,6 @@ func SharedHub() *Hub {
 // Performs the ws upgrade
 func (h *Hub) Upgrade(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("Upgrading connection ...")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("💩", err)
