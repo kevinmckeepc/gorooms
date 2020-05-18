@@ -20,10 +20,11 @@ go get golang.org/x/tools/cmd/godoc
 go get github.com/golang/lint/golint
 ```
 
+# MongoDB Install
+
 > NOTE: Installing MongoDB is currently not necessary. That's the next step in the project :)
 > Skip ahead to running the project below.
 
-# MongoDB Install
 
 ```
 brew tap mongodb/brew
