@@ -30,8 +30,10 @@ var (
 )
 
 type Position struct {
-	X int  `json:"x"`
-  Y int  `json:"y"`
+  Uid   string `json:"uid"`
+  Name  string `json:"name"`
+	X     int    `json:"x"`
+  Y     int    `json:"y"`
 }
 
 // Client is a middleman between the websocket connection and the hub.

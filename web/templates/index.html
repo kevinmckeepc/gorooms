@@ -1,19 +1,36 @@
 <html>
   <head>
     <title>Welcome to the WWW 2006!</title>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+    <style>
+      .user {
+        position: absolute;
+        background-color: grey;
+        color: white;
+        padding: 4px;
+      }
+    </style>
     <script>
 
-      var ws;
+      var ws; // The websocket connection
+      var me = {}; // Local user info
+      var users = {}; // A hash of currently connected users
 
+      // Connect to the websocket and start handling socket messages
       function connect() {
 
         // Connect to the websocket
         if (window["WebSocket"]) {
-            console.log('We have WebSockets available');
+
             let socketUrl = "ws://" + document.location.host + "/ws"
-            console.log(socketUrl);
             ws = new WebSocket(socketUrl);
 
             ws.onopen = function (e) {
@@ -25,36 +42,127 @@
             };
 
             ws.onmessage = function (e) {
-              //var msg = JSON.parse(e.data);
-              console.log(`Received message ${e.data}`);
+              try {
+                let message = JSON.parse(e.data);
+                handlePositionMessage(message);
+              } catch(err) {
+              }
             };
         } else {
           console.log('Your browser does not support WebSockets.');
         }
       }
 
+      // Handle mouse move events and send the messages to our websocket
       function handleMouseMove(event) {
            var eventDoc, doc, body;
            event = event || window.event;
 
-           var msg = {x: event.pageX, y: event.pageY};
-           if (!ws) {
-             console.log('No connection!');
+           // Don't send any messages if we aren't connected
+           if (!ws && Object.keys(user).length === 0) {
+             console.log('No connection or user!');
              return false;
           }
-          let payload = JSON.stringify(msg);
+
+          // Grab the user's page coordinates in x, y
+          let position = {x: event.pageX, y: event.pageY};
+          let message = {...me, ...position}; // Merge the me & position objects
+          let payload = JSON.stringify(message);
           ws.send(payload);
        }
 
-      $().ready(function () {
-        connect();
-        document.onmousemove = handleMouseMove;
+       // Start driving UI events from our socket messages
+       function handlePositionMessage(message) {
+         let uid = message.uid;
+         console.log(`Received message ${uid}`);
+
+         if (uid == me.uid) {
+           return false;
+         }
+
+         if (!users[uid]) {
+           // Create our div element
+           let $div = $(`<div id='${uid}' class='user'>${message.name}</div>`);
+           // Generate a unique color for the user
+           let color = stringToColour(uid);
+           $div.css('background-color', color);
+           $('body').append($div);
+         }
+         users[uid] = message;
+
+         // Move the div element to the users x, y position
+         console.log(`🐳 Moving ${message.name} to [${message.x}, ${message.y}]`);
+         $(`#${uid}`).css({ top: message.y, left: message.x});
+       }
+
+       function stringToColour(str) {
+          var hash = 0;
+          for (var i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+          }
+          var colour = '#';
+          for (var i = 0; i < 3; i++) {
+            var value = (hash >> (i * 8)) & 0xFF;
+            colour += ('00' + value.toString(16)).substr(-2);
+          }
+          return colour;
+        }
+
+       // Wait for the dom to ready
+       $().ready(function () {
+         $('#btn-connect').click(function(e) {
+           let uid = Math.random().toString(36).substring(2) + Date.now().toString(36);
+           var name = $('#inputName').val();
+           if (name.length == 0) {
+             name = 'Anonymous';
+           }
+
+           me = {uid: uid, name: name}; // Save our `me` info
+           connect();
+           // Start sending mouse move events
+           document.onmousemove = handleMouseMove;
+        });
       });
     </script>
   </head>
-  <body>
-    <h1>Hello WWW 2009 / 2010
-    </h1>
-    <h2>This page has had <span id="visitor-counter">{{.VisitorCount}}</span> visitors</h2>
+  <body class="text-center">
+
+    <div class="container-fluid mt-5">
+        <div class="row">
+            <div class="col">
+              <!-- Button trigger modal -->
+              <button type="button" id="btn-join" class="btn btn-lg btn-success" data-toggle="modal" data-target="#joinModal">
+                Join Room
+              </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="joinModal" tabindex="-1" role="dialog" aria-labelledby="joinModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="joinModalLabel">Join Room</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Connect">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form class="form-join">
+                <div class="form-group">
+                  <label for="inputName" class="sr-only">Name</label>
+                  <input type="text" id="inputName" class="form-control" placeholder="Name" required autofocus />
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="btn-connect" class="btn btn-primary" data-dismiss="modal">Connect</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
   </body>
 <html>
