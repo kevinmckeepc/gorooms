@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Welcome to the WWW 2006!</title>
+    <title>Welcome to the WWW 2011!</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -36,15 +36,17 @@
             ws.onopen = function (e) {
               console.log('Connection opened');
               $('#btn-action').removeClass('btn-success').addClass('btn-danger').html('Leave Room');
-              // Start sending mouse move events
-              document.onmousemove = handleMouseMove;
+              // Start sending mouse move & touch move events
+              document.addEventListener('mousemove', handleMouseMove, true);
+              document.addEventListener('touchmove', handleTouchMove, true);
             };
 
             ws.onclose = function (e) {
               console.log('Connection closed');
               $('#btn-action').removeClass('btn-danger').addClass('btn-success').html('Join Room');
-              // Stop sending mouse move events
-              document.onmousemove = function() { };
+              // Stop sending mouse & touch move events
+              document.removeEventListener('mousemove', handleMouseMove, true);
+              document.removeEventListener('touchmove', handleTouchMove, true);
             };
 
             ws.onmessage = function (e) {
@@ -59,7 +61,7 @@
         }
       }
 
-      // Handle mouse move events and send the messages to our websocket
+      // Handle mouse & touch move events and send the messages to our websocket
       function handleMouseMove(event) {
            var eventDoc, doc, body;
            event = event || window.event;
@@ -75,6 +77,25 @@
           let message = {...me, ...position}; // Merge the me & position objects
           let payload = JSON.stringify(message);
           ws.send(payload);
+       }
+
+       // For handling touch devices
+       function handleTouchMove(event) {
+
+         let touch = event.touches[0] || event.targetTouches[0];
+         let x = touch.pageX;
+         let y = touch.pageY;
+         // Don't send any messages if we aren't connected
+         if (!ws && Object.keys(user).length === 0) {
+           console.log('No connection or user!');
+           return false;
+        }
+
+        let position = {x: x, y: y};
+        let message = {...me, ...position}; // Merge the me & position objects
+        let payload = JSON.stringify(message);
+        ws.send(payload);
+
        }
 
        // Start driving UI events from our socket messages
