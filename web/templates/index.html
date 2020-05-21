@@ -47,6 +47,7 @@
               // Stop sending mouse & touch move events
               document.removeEventListener('mousemove', handleMouseMove, true);
               document.removeEventListener('touchmove', handleTouchMove, true);
+              $('.user').remove(); // Cleanup all the user divs floating around
             };
 
             ws.onmessage = function (e) {

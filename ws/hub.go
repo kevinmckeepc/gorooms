@@ -3,7 +3,13 @@ package ws
 import (
 	"fmt"
 	"net/http"
+	"github.com/gorilla/websocket"
 )
+
+var upgrader = websocket.Upgrader {
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
 // Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
