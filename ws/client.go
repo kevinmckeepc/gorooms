@@ -1,8 +1,8 @@
 package ws
 
 import (
-  "encoding/json"
-  "fmt"
+	"encoding/json"
+	"fmt"
 	"bytes"
 	"log"
 	"time"
@@ -26,7 +26,7 @@ var (
 )
 
 type Position struct {
-  Uid   string `json:"uid"`
+	Uid   string `json:"uid"`
   Name  string `json:"name"`
 	X     int    `json:"x"`
   Y     int    `json:"y"`
